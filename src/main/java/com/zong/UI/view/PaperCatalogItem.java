@@ -12,4 +12,12 @@ public class PaperCatalogItem {
     //答题状态
     public static String UNANSWERED="UnAnswered";
     public static String ANSWERED="Answered";
+
+    //按钮类型
+    public static String A_BUTTON="A";
+    public static String B_BUTTON="B";
+    public static String C_BUTTON="C";
+    public static String D_BUTTON="D";
+    public static String NO_BUTTON="NO";
+    public static String SUBMIT_BUTTON="Submit";
 }
