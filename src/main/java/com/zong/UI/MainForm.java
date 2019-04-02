@@ -8,11 +8,11 @@ import com.zong.paper.PaperController;
 import com.zong.question.QuestionsPool;
 
 import javax.swing.*;
+import javax.swing.event.AncestorListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
@@ -37,6 +37,7 @@ public class MainForm {
     private JLabel C_Label;
     private JLabel D_Label;
     private JButton submitButton;
+    private JButton nextButton;
 
     //数据结构题库
     private static Vector allQuestions=new Vector();
@@ -57,6 +58,13 @@ public class MainForm {
 
 
 
+    //展示题目初始界面
+    private void showInitView(){
+        //第一道题处于选中状态
+        CompleteTable.setRowSelectionInterval(0, 0);//修改这一行的选中状态
+        //界面上显示第一道题，题目信息，并重置按钮
+        showQuestionValue(0);
+    }
     //展示一道题的显示内容（int no）
     private void showQuestionValue(int no){
         //缓存当前题目信息
@@ -66,7 +74,7 @@ public class MainForm {
         String content=getQuestionViewSelected(no);
         //将题目与选项显示在界面上
         questionsTextPane.setText(content);
-        //重置按钮
+//        //重置按钮
         resetButtonBehaviour();
     }
 
@@ -113,6 +121,8 @@ public class MainForm {
         NO=NO+1;
         CompleteTable.setRowSelectionInterval(NO, NO);//修改这一行的选中状态
         showQuestionValue(NO);//显示下一道题
+        //重置按钮
+        resetButtonBehaviour();
     }
 
     public MainForm() {
@@ -156,7 +166,16 @@ public class MainForm {
             public void mousePressed(MouseEvent e) {
                 super.mousePressed(e);
                 answerQuestion();//用户答题逻辑
-                autoNext();//自动切题
+                //重置按钮
+                resetButtonBehaviour();
+            }
+        });
+//        showInitView();
+        nextButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                autoNext();//切题
             }
         });
     }
