@@ -20,7 +20,7 @@ public class Analysis {
         return flag;
     }
 
-    //从一个字符串链表中解析出来所有的题目和选项 有题目分类 返回值是题目的链表
+    //从一个字符串链表中解析出来所有的题目和选项 有题目类别，但是没有分类 返回值是题目的链表
     public static List<QuestionInfo> getAllQuestionsInfo(List<String> lines){
 
         List<QuestionInfo> allQuestions=new ArrayList<QuestionInfo>();

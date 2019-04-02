@@ -2,15 +2,10 @@ package com.zong.UI;
 
 import com.zong.UI.view.PaperCatalog;
 import com.zong.UI.view.PaperCatalogItem;
-import com.zong.analysis.Analysis;
-import com.zong.common.FilePath;
-import com.zong.common.QuestionType;
-import com.zong.common.QuestionTypeNo;
 import com.zong.domain.Paper;
 import com.zong.domain.QuestionInfo;
 import com.zong.paper.PaperController;
-import com.zong.question.QuestionController;
-import com.zong.utils.PdfUtils;
+import com.zong.question.QuestionsPool;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -18,7 +13,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -44,14 +39,14 @@ public class MainForm {
     private JButton submitButton;
 
     //数据结构题库
-    private static List<QuestionInfo> allQuestions;
+    private static Vector allQuestions=new Vector();
     //当前界面上显示的试卷（未作）
-    private static Paper paper;
+    private static Paper paper=new Paper();
     //已经完成的试卷
-    private static Paper paperAnswered;
+    private static Paper paperAnswered=new Paper();
     //试题界面当前显示的题目
     private static int NO;
-    private static QuestionInfo nowQuestion;
+    private static QuestionInfo nowQuestion=new QuestionInfo();
     //文本格式题库
 //    private static Vector allQuestionsInfo=null;
 //    private static List<String> choices=null;
@@ -60,23 +55,72 @@ public class MainForm {
 //    private static List<ArrayList<String>> answers=null;
 //    private static List<String> rightAnswers=null;
 
+
+
+    //展示一道题的显示内容（int no）
+    private void showQuestionValue(int no){
+        //缓存当前题目信息
+        nowQuestion=paper.getAllQuestions().get(no);
+        NO=no;
+        //获取题目信息
+        String content=getQuestionViewSelected(no);
+        //将题目与选项显示在界面上
+        questionsTextPane.setText(content);
+        //重置按钮
+        resetButtonBehaviour();
+    }
+
+    //展示用户选中的题目的内容
+    private void showQuestionValue(){
+        //获取用户选中的那一行题的编号
+        int no=Integer.parseInt(CompleteTable.getValueAt(CompleteTable.getSelectedRow(), 0).toString())-1;
+        //获取用户选中的题目的状态
+        String state=CompleteTable.getValueAt(CompleteTable.getSelectedRow(), 3).toString();
+        System.out.println(CompleteTable.getValueAt(CompleteTable.getSelectedRow(), 0).toString());
+        showQuestionValue(no);
+    }
+
+    //用户答题逻辑
+    private void answerQuestion(){
+        String answer=getButtonBehaviour();
+        if(!answer.equals(PaperCatalogItem.NO)){
+            if(nowQuestion.getAnswer().contains(answer)){//题做对了
+                float score=nowQuestion.getScore();
+                changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
+                //更新题目信息，这次将标准答案添加到题目下方
+                String content=getQuestionViewSelected(NO);
+                //将题目与选项显示在界面上
+                questionsTextPane.setText(content+"\n"+nowQuestion.getAnswer());
+                rightValue.setText(String.valueOf(paper.getRight()+1));//在界面上设置正确数量
+                paper.setRight(paper.getRight()+1);//在试卷中设置正确数
+            }else{//题做错了
+                float score=0.0f;
+                changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
+                highlightMistake(CompleteTable,NO);
+                //更新题目信息，这次将标准答案添加到题目下方
+                String content=getQuestionViewSelected(NO);
+                //将题目与选项显示在界面上
+                questionsTextPane.setText(content+"\n"+nowQuestion.getAnswer());
+                wrongValue.setText(String.valueOf(paper.getWrong()+1));//在界面上设置错误数量
+                paper.setWrong(paper.getWrong()+1);//在试卷中设置错题数
+            }
+        }
+    }
+
+    //自动切换题目
+    private void autoNext(){
+        //从哪一行到哪一行，两个数一样就是一行，从0开始
+        NO=NO+1;
+        CompleteTable.setRowSelectionInterval(NO, NO);//修改这一行的选中状态
+        showQuestionValue(NO);//显示下一道题
+    }
+
     public MainForm() {
         CompleteTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 super.mousePressed(e);
-                //获取用户选中的那一行题的编号
-                int no=Integer.parseInt(CompleteTable.getValueAt(CompleteTable.getSelectedRow(), 0).toString());
-                System.out.println(CompleteTable.getValueAt(CompleteTable.getSelectedRow(), 0).toString());
-                //缓存当前题目信息
-                nowQuestion=paper.getAllQuestions().get(no);
-                NO=no;
-                //获取题目信息
-                String content=getQuestionViewSelected(no);
-                //将题目与选项显示在界面上
-                questionsTextPane.setText(content);
-                //重置按钮
-                resetButtonBehaviour();
+                showQuestionValue();
             }
         });
         aButton.addMouseListener(new MouseAdapter() {
@@ -111,29 +155,8 @@ public class MainForm {
             @Override
             public void mousePressed(MouseEvent e) {
                 super.mousePressed(e);
-                String answer=getButtonBehaviour();
-                if(!answer.equals(PaperCatalogItem.NO)){
-                   if(nowQuestion.getAnswer().contains(answer)){//题做对了
-                         float score=nowQuestion.getScore();
-                        changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
-                       //更新题目信息，这次将标准答案添加到题目下方
-                       String content=getQuestionViewSelected(NO);
-                       //将题目与选项显示在界面上
-                       questionsTextPane.setText(content+"\n"+nowQuestion.getAnswer());
-                       rightValue.setText(String.valueOf(paper.getRight()+1));//在界面上设置正确数量
-                       paper.setRight(paper.getRight()+1);//在试卷中设置正确数
-                   }else{//题做错了
-                       float score=0.0f;
-                       changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
-                       highlightMistake(CompleteTable,NO);
-                       //更新题目信息，这次将标准答案添加到题目下方
-                       String content=getQuestionViewSelected(NO);
-                       //将题目与选项显示在界面上
-                       questionsTextPane.setText(content+"\n"+nowQuestion.getAnswer());
-                       wrongValue.setText(String.valueOf(paper.getWrong()+1));//在界面上设置错误数量
-                       paper.setWrong(paper.getWrong()+1);//在试卷中设置错题数
-                   }
-                }
+                answerQuestion();//用户答题逻辑
+                autoNext();//自动切题
             }
         });
     }
@@ -145,21 +168,6 @@ public class MainForm {
                 //重写getTableCellRendererComponent 方法
                 @Override
                 public Component getTableCellRendererComponent(JTable table,Object value, boolean isSelected, boolean hasFocus,int row, int column) {
-//                    setBackground(Color.RED);
-
-//                    Component renderer = DEFAULT_RENDERER.getTableCellRendererComponent(table,
-//                            value,isSelected, hasFocus, row, column);
-//                    if(row==0&&column==1) {
-//                        foreground = Color.red;
-//                        background = Color.green;
-//                    }else{
-//                        foreground = Color.BLACK;
-//                        background = Color.WHITE;
-//                    }
-//                    renderer.setForeground(foreground);
-//                    renderer.setBackground(background);
-//                    return  renderer;
-
                     if(row+1==rowIn){//如果不确定一下会对每一行都染上颜色
                         setForeground(Color.RED);
                     }else{
@@ -226,7 +234,8 @@ public class MainForm {
             dButton.setEnabled(false);
         }
     }
-    //获取题目信息
+
+    //生成题目信息
     private static String getQuestionViewSelected(int no){
          String type=paper.getAllQuestions().get(no).getType();
          String content=paper.getAllQuestions().get(no).getQuestion();
@@ -249,25 +258,27 @@ public class MainForm {
 
 
         //初始化题库
-        initQuestionPool();
-
+//        initQuestionPool();
+        try {
+            QuestionsPool.initQuestionPool();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         //生成一张示例试卷(20 choice(0.5) ; 5 mutiple(1) ; 5trueorfalse(1)  )
-        paper=PaperController.getPaper(allQuestions);
-
+//        paper=PaperController.getPaper(allQuestions);
+        paper=PaperController.genOnePaper();
         //展示试卷目录
         DefaultTableModel model = PaperCatalog.getPaperCatalogView(paper);
         model.isCellEditable(4,30);
         mainForm.CompleteTable.setModel(model);
 //        mainForm.CompleteTable.setEnabled(false);
 
-        //
-        int a=0;
     }
 
     //初始化题库
     private static void initQuestionPool(){
         try {
-            allQuestions= QuestionController.initQuestionPool();
+            allQuestions= QuestionsPool.initQuestionPool();
         } catch (Exception e) {
             e.printStackTrace();
         }
