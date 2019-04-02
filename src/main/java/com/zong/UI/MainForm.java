@@ -2,9 +2,11 @@ package com.zong.UI;
 
 import com.zong.UI.view.PaperCatalog;
 import com.zong.UI.view.PaperCatalogItem;
+import com.zong.common.QuestionType;
 import com.zong.domain.Paper;
 import com.zong.domain.QuestionInfo;
 import com.zong.paper.PaperController;
+import com.zong.question.QuestionController;
 import com.zong.question.QuestionsPool;
 
 import javax.swing.*;
@@ -92,7 +94,7 @@ public class MainForm {
     private void answerQuestion(){
         String answer=getButtonBehaviour();
         if(!answer.equals(PaperCatalogItem.NO)){
-            if(nowQuestion.getAnswer().contains(answer)){//题做对了
+            if(QuestionController.judgeAnswer(nowQuestion,answer)){//题做对了
                 float score=nowQuestion.getScore();
                 changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
                 //更新题目信息，这次将标准答案添加到题目下方
@@ -170,7 +172,7 @@ public class MainForm {
                 resetButtonBehaviour();
             }
         });
-//        showInitView();
+
         nextButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -208,8 +210,8 @@ public class MainForm {
 
     //修改题目在当前表格中的状态
     private void changePaperCatalogBehaviour(int no,float actual,String state){
-          CompleteTable.setValueAt(state,no-1,3);
-          CompleteTable.setValueAt(actual,no-1,2);
+          CompleteTable.setValueAt(state,no,3);
+          CompleteTable.setValueAt(actual,no,2);
     }
     //重置当前按钮的所有行为
     private void resetButtonBehaviour(){
@@ -220,6 +222,16 @@ public class MainForm {
     }
     //获取当前按钮的行为，答案
     private String getButtonBehaviour(){
+        String result="";
+        if(!aButton.isEnabled()) result+=PaperCatalogItem.A_BUTTON;
+        if(!bButton.isEnabled()) result+=PaperCatalogItem.B_BUTTON;
+        if(!cButton.isEnabled()) result+=PaperCatalogItem.C_BUTTON;
+        if(!dButton.isEnabled()) result+=PaperCatalogItem.D_BUTTON;
+        return result;
+    }
+    @Deprecated
+    //获取当前按钮的行为，答案(已废弃)
+    private String getButtonBehaviour_Deprecated(){
         if(!aButton.isEnabled()) return PaperCatalogItem.A_BUTTON;
         if(!bButton.isEnabled()) return PaperCatalogItem.B_BUTTON;
         if(!cButton.isEnabled()) return PaperCatalogItem.C_BUTTON;
@@ -228,6 +240,46 @@ public class MainForm {
     }
     //改变按钮的行为
     private void changeButtonBehaviour(String type){
+        if(nowQuestion.getType().equals(QuestionType.MULTIPLE)){
+            changeButtonBehaviourMutiple(type);
+        }
+        else{
+            changeButtonBehaviourChoice(type);
+        }
+    }
+    //改变多选按钮的行为
+    private void changeButtonBehaviourMutiple(String type){
+        if(type.equals(PaperCatalogItem.A_BUTTON)){
+            if(aButton.isEnabled()){
+                aButton.setEnabled(false);
+            }else{
+                aButton.setEnabled(true);
+            }
+        }
+        if(type.equals(PaperCatalogItem.B_BUTTON)){
+            if(bButton.isEnabled()){
+                bButton.setEnabled(false);
+            }else{
+                bButton.setEnabled(true);
+            }
+        }
+        if(type.equals(PaperCatalogItem.C_BUTTON)){
+            if(cButton.isEnabled()){
+                cButton.setEnabled(false);
+            }else{
+                cButton.setEnabled(true);
+            }
+        }
+        if(type.equals(PaperCatalogItem.D_BUTTON)){
+            if(dButton.isEnabled()){
+                dButton.setEnabled(false);
+            }else{
+                dButton.setEnabled(true);
+            }
+        }
+    }
+    //改变单选按钮的行为
+    private void changeButtonBehaviourChoice(String type){
         if(type.equals(PaperCatalogItem.A_BUTTON)){
             aButton.setEnabled(false);
             bButton.setEnabled(true);
