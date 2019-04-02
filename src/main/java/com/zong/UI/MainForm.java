@@ -60,6 +60,10 @@ public class MainForm {
 
 
 
+    //进行展示计分操作
+    private void showScore(Paper paper){
+
+    }
     //展示题目初始界面
     private void showInitView(){
         //第一道题处于选中状态
@@ -90,11 +94,15 @@ public class MainForm {
         showQuestionValue(no);
     }
 
+
+
     //用户答题逻辑
     private void answerQuestion(){
         String answer=getButtonBehaviour();
-        if(!answer.equals(PaperCatalogItem.NO)){
-            if(QuestionController.judgeAnswer(nowQuestion,answer)){//题做对了
+        if(!answer.equals(PaperCatalogItem.NO)){//用户回答了题目
+            if(QuestionController.judgeAnswer(nowQuestion,answer)){//判断题目是否完成
+                //向试卷中的4种正确题目链表中添加题目
+//                addRightQuestion2Paper(nowQuestion,paper);
                 float score=nowQuestion.getScore();
                 changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
                 //更新题目信息，这次将标准答案添加到题目下方
@@ -106,13 +114,14 @@ public class MainForm {
             }else{//题做错了
                 float score=0.0f;
                 changePaperCatalogBehaviour(NO,score,PaperCatalogItem.ANSWERED);
+                PaperController.addWrongQuestion2Paper(nowQuestion,paper);//将该题的错误题型添加到试卷中
+                                                                         //将该题的正确题型从试卷中移除
                 highlightMistake(CompleteTable,NO);
                 //更新题目信息，这次将标准答案添加到题目下方
                 String content=getQuestionViewSelected(NO);
                 //将题目与选项显示在界面上
                 questionsTextPane.setText(content+"\n"+nowQuestion.getAnswer());
-                wrongValue.setText(String.valueOf(paper.getWrong()+1));//在界面上设置错误数量
-                paper.setWrong(paper.getWrong()+1);//在试卷中设置错题数
+                wrongValue.setText(String.valueOf(paper.getWrong()));//在界面上设置错误数量
             }
         }
     }
@@ -213,31 +222,8 @@ public class MainForm {
           CompleteTable.setValueAt(state,no,3);
           CompleteTable.setValueAt(actual,no,2);
     }
-    //重置当前按钮的所有行为
-    private void resetButtonBehaviour(){
-        aButton.setEnabled(true);
-        bButton.setEnabled(true);
-        cButton.setEnabled(true);
-        dButton.setEnabled(true);
-    }
-    //获取当前按钮的行为，答案
-    private String getButtonBehaviour(){
-        String result="";
-        if(!aButton.isEnabled()) result+=PaperCatalogItem.A_BUTTON;
-        if(!bButton.isEnabled()) result+=PaperCatalogItem.B_BUTTON;
-        if(!cButton.isEnabled()) result+=PaperCatalogItem.C_BUTTON;
-        if(!dButton.isEnabled()) result+=PaperCatalogItem.D_BUTTON;
-        return result;
-    }
-    @Deprecated
-    //获取当前按钮的行为，答案(已废弃)
-    private String getButtonBehaviour_Deprecated(){
-        if(!aButton.isEnabled()) return PaperCatalogItem.A_BUTTON;
-        if(!bButton.isEnabled()) return PaperCatalogItem.B_BUTTON;
-        if(!cButton.isEnabled()) return PaperCatalogItem.C_BUTTON;
-        if(!dButton.isEnabled()) return PaperCatalogItem.D_BUTTON;
-        return PaperCatalogItem.NO;
-    }
+
+
     //改变按钮的行为
     private void changeButtonBehaviour(String type){
         if(nowQuestion.getType().equals(QuestionType.MULTIPLE)){
@@ -306,18 +292,34 @@ public class MainForm {
         }
     }
 
-    //生成题目信息
-    private static String getQuestionViewSelected(int no){
-         String type=paper.getAllQuestions().get(no).getType();
-         String content=paper.getAllQuestions().get(no).getQuestion();
-         String choices="";
-         for(int i=0;i<paper.getAllQuestions().get(no).getChoices().size();i++){
-             choices+=paper.getAllQuestions().get(no).getChoices().get(i)+"  \n";
-         }
-         String result=type+"\n"+content+"\n"+choices;
+    //重置当前按钮的所有行为
+    private void resetButtonBehaviour(){
+        aButton.setEnabled(true);
+        bButton.setEnabled(true);
+        cButton.setEnabled(true);
+        dButton.setEnabled(true);
+    }
+    //获取当前按钮的行为，答案
+    private String getButtonBehaviour(){
+        String result="";
+        if(!aButton.isEnabled()) result+=PaperCatalogItem.A_BUTTON;
+        if(!bButton.isEnabled()) result+=PaperCatalogItem.B_BUTTON;
+        if(!cButton.isEnabled()) result+=PaperCatalogItem.C_BUTTON;
+        if(!dButton.isEnabled()) result+=PaperCatalogItem.D_BUTTON;
         return result;
     }
+    @Deprecated
+    //获取当前按钮的行为，答案(已废弃)
+    private String getButtonBehaviour_Deprecated(){
+        if(!aButton.isEnabled()) return PaperCatalogItem.A_BUTTON;
+        if(!bButton.isEnabled()) return PaperCatalogItem.B_BUTTON;
+        if(!cButton.isEnabled()) return PaperCatalogItem.C_BUTTON;
+        if(!dButton.isEnabled()) return PaperCatalogItem.D_BUTTON;
+        return PaperCatalogItem.NO;
+    }
 
+
+    //界面主函数
     public static void main(String[] args) {
         //初始化界面
         MainForm mainForm=new MainForm();
@@ -346,6 +348,17 @@ public class MainForm {
 
     }
 
+    //生成题目信息
+    private static String getQuestionViewSelected(int no){
+        String type=paper.getAllQuestions().get(no).getType();
+        String content=paper.getAllQuestions().get(no).getQuestion();
+        String choices="";
+        for(int i=0;i<paper.getAllQuestions().get(no).getChoices().size();i++){
+            choices+=paper.getAllQuestions().get(no).getChoices().get(i)+"  \n";
+        }
+        String result=type+"\n"+content+"\n"+choices;
+        return result;
+    }
     //初始化题库
     private static void initQuestionPool(){
         try {

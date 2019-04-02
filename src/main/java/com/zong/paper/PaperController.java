@@ -136,4 +136,56 @@ public class PaperController {
         return paper;
     }
 
+    //向试卷中添加错误题目
+    //这里及有一个添加正确题目同时又有一个添加错误题目，其实好像是有一点代码冗余，我现在有一点模糊的想法，
+    // 应该是创建两个类一个是正确题目类一个是错误题目类，这两个类同时继承与同一个题目类，然后根据传递进来的参数的不同，设置不同的类，
+    //试卷中一概使用父类，根据参数将父类赋值为不同的子类。
+    public static void addWrongQuestion2Paper(QuestionInfo question,Paper paper){
+        //获取题目类型
+        String type=question.getType();
+        //获取全体正确题目变量
+        int wrongNum=paper.getWrong();
+        List<QuestionInfo> wrongs=paper.getWrongQuestions();
+
+        //修改全体变量
+        wrongNum++;
+        wrongs.add(question);
+
+        //传回全体变量
+        paper.setWrong(wrongNum);
+        paper.setWrongQuestions(wrongs);
+        //其实每种类型有大量的代码重复，但是我现在不知道要怎么处理！！！！！
+        if(type.equals(QuestionType.CHOICE)){
+            int wrongChoice=paper.getWrongChoices();
+            List<QuestionInfo> wrongChoices=paper.getWrongChoicesQuestions();
+
+            wrongChoice++;
+            wrongChoices.add(question);
+
+            paper.setWrongChoices(wrongChoice);
+            paper.setWrongChoicesQuestions(wrongChoices);
+        }
+        if(type.equals(QuestionType.MULTIPLE)){
+            int mulNum=paper.getWrongMuliple();
+            List<QuestionInfo> wrongMuls=paper.getWrongMulipleQuestions();
+
+            mulNum++;
+            wrongMuls.add(question);
+
+            paper.setWrongMuliple(mulNum);
+            paper.setWrongMulipleQuestions(wrongMuls);
+        }
+        if(type.equals(QuestionType.TRUEORFALSE)){
+            int trueNum=paper.getWrongTrueorfalse();
+            List<QuestionInfo> trues=paper.getWrongTrueorfalseQuestions();
+
+            trueNum++;
+            trues.add(question);
+
+            paper.setWrong(trueNum);
+            paper.setWrongTrueorfalseQuestions(trues);
+        }
+
+    }
+
 }
